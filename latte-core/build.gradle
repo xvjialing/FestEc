@@ -1,4 +1,5 @@
 apply plugin: 'com.android.library'
+apply plugin: 'com.jakewharton.butterknife'
 
 android {
     compileSdkVersion 26
@@ -32,4 +33,10 @@ dependencies {
     api 'com.android.support.test.espresso:espresso-core:3.0.1'
     api 'com.android.support.constraint:constraint-layout:1.0.2'
     api project(':latte-annotations')
+//    fragmentation依赖
+    api 'me.yokeyword:fragmentation:1.2.4'
+    api 'me.yokeyword:fragmentation-swipeback:1.2.4'
+//    butterknife依赖
+    api 'com.jakewharton:butterknife:9.0.0-SNAPSHOT'
+    annotationProcessor 'com.jakewharton:butterknife-compiler:9.0.0-SNAPSHOT'
 }
