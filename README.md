@@ -176,3 +176,175 @@ public class ExampleApp extends Application{
 
 这样项目配置信息初始化就完成了。
 
+## 界面初始化
+
+在latte-core模块中添加delegates文件夹，在其中新建BaseDelagate
+
+```java
+import android.os.Bundle;
+import android.support.annotation.Nullable;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+
+import butterknife.ButterKnife;
+import butterknife.Unbinder;
+import me.yokeyword.fragmentation_swipeback.SwipeBackFragment;
+
+/**
+ * Created by xvjialing on 2018/1/11.
+ */
+
+public abstract class BaseDelegate extends SwipeBackFragment {
+
+    @SuppressWarnings("SpellCheckingInspection")
+    private Unbinder mUnbinder=null;
+
+    public abstract Object setLayout();
+
+    public abstract void onBindView(@Nullable Bundle savedInstanceState,View rootView);
+
+    @Nullable
+    @Override
+    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        View rootView=null;
+
+        if (setLayout() instanceof Integer){
+            rootView=inflater.inflate((Integer) setLayout(),container,false);
+        }else if (setLayout() instanceof View){
+            rootView= (View) setLayout();
+        }
+        if (rootView!=null){
+            mUnbinder= ButterKnife.bind(this,rootView);
+            onBindView(savedInstanceState,rootView);
+        }
+        return rootView;
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        if (mUnbinder!=null){
+            mUnbinder.unbind();
+        }
+    }
+}
+```
+
+再新建PermissionCheckerDelegate继承自BaseDelegate
+
+```java
+/**
+ * Created by xvjialing on 2018/1/11.
+ */
+
+public abstract class PermissionCheckerDelegate extends BaseDelegate {
+
+}
+```
+
+再新建LatteDelegate继承自PermissionCheckerDelegate
+
+```java
+/**
+ * Created by xvjialing on 2018/1/11.
+ */
+
+public abstract class LatteDelegate extends PermissionCheckerDelegate{
+}
+```
+
+再新建activities文件夹，并在其中新建ExampleActivity继承自ProxyActivity
+
+```java
+import android.os.Bundle;
+import android.support.annotation.Nullable;
+import android.support.v7.widget.ContentFrameLayout;
+
+import com.lytech.xvjialing.latte.R;
+import com.lytech.xvjialing.latte.delegates.LatteDelegate;
+
+import me.yokeyword.fragmentation.SupportActivity;
+
+/**
+ * Created by xvjialing on 2018/1/11.
+ */
+
+public abstract class ProxyActivity extends SupportActivity{
+
+    public abstract LatteDelegate setRootDelegate();
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        initContainer(savedInstanceState);
+    }
+
+    private void initContainer(@Nullable Bundle savedInstanceState){
+        final ContentFrameLayout container=new ContentFrameLayout(this);
+        container.setId(R.id.delegate_container);
+        setContentView(container);
+        if (savedInstanceState==null){
+            loadRootFragment(R.id.delegate_container,setRootDelegate());
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        System.gc();
+        System.runFinalization();
+    }
+}
+```
+
+然后在example模块中新建布局文件delegate_example，再新建ExampleDeledate继承自LatteDelegate
+
+```java
+import android.os.Bundle;
+import android.support.annotation.Nullable;
+import android.view.View;
+
+import com.lytech.xvjialing.festec.R;
+import com.lytech.xvjialing.latte.delegates.LatteDelegate;
+
+/**
+ * Created by xvjialing on 2018/1/22.
+ */
+
+public class ExampleDeledate extends LatteDelegate {
+    @Override
+    public Object setLayout() {
+        return R.layout.delegate_example;
+    }
+
+    @Override
+    public void onBindView(@Nullable Bundle savedInstanceState, View rootView) {
+
+    }
+}
+```
+
+最后新建ExampleActivity继承自ProxyActivity
+
+```java
+
+import com.lytech.xvjialing.latte.activities.ProxyActivity;
+import com.lytech.xvjialing.latte.delegates.LatteDelegate;
+
+public class ExampleActivity extends ProxyActivity {
+
+    @Override
+    public LatteDelegate setRootDelegate() {
+        return new ExampleDeledate();
+    }
+}
+```
+
+自此界面的初始化就完成了。
+
+## 初始化网络
+
+
+
